@@ -1,0 +1,15 @@
+{
+  "name": "roon-discord-rp",
+  "version": "0.5.0",
+  "description": "Roon Extension for Discord Rich Presence",
+  "main": "roon-discord-rp.js",
+  "author": "615283 (James Conway)",
+  "license": "",
+  "dependencies": {
+    "discord-rpc": "^3.0.0-beta.12",
+    "node-roon-api": "github:roonlabs/node-roon-api",
+    "node-roon-api-settings": "github:roonlabs/node-roon-api-settings",
+    "node-roon-api-status": "github:roonlabs/node-roon-api-status",
+    "node-roon-api-transport": "github:roonlabs/node-roon-api-transport"
+  }
+}
