@@ -17,7 +17,7 @@
 
 var RoonApi = require('node-roon-api'),
     RoonApiSettings = require('node-roon-api-settings'),
-    RoonApiStatus = require('node-roon-api-status'),
+    RoonApiStautus = require('node-roon-api-status'),
     RoonApiTransport = require('node-roon-api-transport'),
     DiscordRPC = require('discord-rpc');
 
@@ -31,7 +31,7 @@ DiscordRPC.register(clientId);
 
 const rpc = new DiscordRPC.Client({transport: 'ipc'});
 
-rpc.login({clientId: clientId, scopes: scopes}).catch(console.error);
+rpc.login(clientId, { scopes }).catch(console.error);
 
 var roon = new RoonApi({
     extension_id: 'com.georlegacy.general.roon-discord-rp',
@@ -59,7 +59,6 @@ var roon = new RoonApi({
                         zone.outputs.forEach(output => {
                             console.log("logging now playing:");
                             console.log(zone.now_playing);
-                            setActivity();
                             console.log(zone.now_playing.seek_position !== undefined);
                         });
                     });
@@ -81,21 +80,39 @@ var roon = new RoonApi({
     }
 })
 
+const clientId = '464873958232162353';
+
+DiscordRPC.register(clientId);
+
+const rpc = new DiscordRPC.Client({ transport: 'ipc' });
 const startTimestamp = new Date();
 
 async function setActivity() {
+    if (!rpc || !mainWindow) {
+        return;
+    }
 
     rpc.setActivity({
-        details: `test details`,
-        state: 'state test',
+        details: 'nein',
+        state: 'no u',
+        startTimestamp,
         largeImageKey: 'roon-main',
-        largeImageText: 'test',
+        largeImageText: 'tea is delicious',
         smallImageKey: 'roon-small',
-        smallImageText: 'ttt',
+        smallImageText: 'i am my own pillows',
         instance: false,
     });
-
 }
+
+rpc.on('ready', () => {
+    setActivity();
+
+    setInterval(() => {
+        setActivity();
+    }, 15e3);
+});
+
+rpc.login({ clientId }).catch(console.error);
 
 roon.init_services({
     required_services: [RoonApiTransport]
