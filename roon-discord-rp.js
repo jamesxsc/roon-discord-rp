@@ -52,14 +52,25 @@ var roon = new RoonApi({
 
         _transport.subscribe_zones(function (cmd, data) {
             if (cmd == "Changed") {
-                console.log("is changed");
                 if (data.zones_changed) {
-                    console.log("zones_changed === true");
                     data.zones_changed.forEach(zone => {
                         zone.outputs.forEach(output => {
-                            console.log("logging now playing:");
-                            console.log(zone.now_playing);
-                            console.log(zone.now_playing.seek_position !== undefined);
+                            if (zone.state === 'stopped') {
+                                setActivityStopped();
+                                return;
+                            }
+                            if (zone.state === 'paused') {
+                                setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
+                                return;
+                            }
+                            if (zone.state === 'loading') {
+                                setActivityLoading();
+                                return;
+                            }
+                            if (zone.state === 'playing') {
+                                setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
+                                return;
+                            }
                         });
                     });
                 }
@@ -80,39 +91,65 @@ var roon = new RoonApi({
     }
 })
 
-const clientId = '464873958232162353';
+async function setActivity(line1, line2, songLength, currentSeek) {
 
-DiscordRPC.register(clientId);
-
-const rpc = new DiscordRPC.Client({ transport: 'ipc' });
-const startTimestamp = new Date();
-
-async function setActivity() {
-    if (!rpc || !mainWindow) {
-        return;
-    }
+    var startTimestamp = (new Date().getTime() / 1000) - currentSeek;
+    var endTimestamp = startTimestamp + songLength;
 
     rpc.setActivity({
-        details: 'nein',
-        state: 'no u',
+        details: line1,
+        state: line2,
         startTimestamp,
+        endTimestamp,
         largeImageKey: 'roon-main',
-        largeImageText: 'tea is delicious',
+        largeImageText: 'Listening with Roon.',
         smallImageKey: 'roon-small',
-        smallImageText: 'i am my own pillows',
+        smallImageText: 'Roon',
         instance: false,
     });
+
 }
 
-rpc.on('ready', () => {
-    setActivity();
+async function setActivityLoading() {
 
-    setInterval(() => {
-        setActivity();
-    }, 15e3);
-});
+    rpc.setActivity({
+        details: 'Loading...',
+        state: line2,
+        largeImageKey: 'roon-main',
+        largeImageText: 'Loading in Roon.',
+        smallImageKey: 'roon-small',
+        smallImageText: 'Roon',
+        instance: false,
+    });
 
-rpc.login({ clientId }).catch(console.error);
+}
+
+async function setActivityPaused(line1, line2) {
+
+    rpc.setActivity({
+        details: '[Paused] ' + line1,
+        state: line2,
+        largeImageKey: 'roon-main',
+        largeImageText: 'Paused on Roon.',
+        smallImageKey: 'roon-small',
+        smallImageText: 'Roon',
+        instance: false,
+    });
+
+}
+
+async function setActivityStopped() {
+
+    rpc.setActivity({
+        details: 'Not listening',
+        largeImageKey: 'roon-main',
+        largeImageText: 'Idling in Roon',
+        smallImageKey: 'roon-small',
+        smallImageText: 'Roon',
+        instance: false,
+    })
+
+}
 
 roon.init_services({
     required_services: [RoonApiTransport]
