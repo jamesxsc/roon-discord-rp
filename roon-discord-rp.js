@@ -85,7 +85,7 @@ async function setActivityClosed() {
         state: 'Closed or Crashed',
         largeImageKey: 'roon-main',
         largeImageText: 'Not using Roon.',
-        smallImageKey: 'roon-small',
+        smallImageKey: 'exit-symbol',
         smallImageText: 'Roon',
         instance: false,
     });
@@ -104,10 +104,50 @@ async function setActivity(line1, line2, songLength, currentSeek) {
         endTimestamp,
         largeImageKey: 'roon-main',
         largeImageText: 'Listening with Roon.',
+        smallImageKey: 'play-symbol',
+        smallImageText: 'Roon',
+        instance: false,
+    });
+
+}
+
+async function setActivityLoading() {
+
+    rpc.setActivity({
+        details: 'Loading...',
+        largeImageKey: 'roon-main',
+        largeImageText: 'Loading in Roon.',
         smallImageKey: 'roon-small',
         smallImageText: 'Roon',
         instance: false,
     });
+
+}
+
+async function setActivityPaused(line1, line2) {
+
+    rpc.setActivity({
+        details: '[Paused] ' + line1,
+        state: line2,
+        largeImageKey: 'roon-main',
+        largeImageText: 'Paused on Roon.',
+        smallImageKey: 'pause-symbol',
+        smallImageText: 'Roon',
+        instance: false,
+    });
+
+}
+
+async function setActivityStopped() {
+
+    rpc.setActivity({
+        details: 'Not listening',
+        largeImageKey: 'roon-main',
+        largeImageText: 'Idling in Roon',
+        smallImageKey: 'stop-symbol',
+        smallImageText: 'Roon',
+        instance: false,
+    })
 
 }
 
@@ -156,43 +196,3 @@ roon.init_services({
 });
 
 roon.start_discovery();
-
-async function setActivityLoading() {
-
-    rpc.setActivity({
-        details: 'Loading...',
-        largeImageKey: 'roon-main',
-        largeImageText: 'Loading in Roon.',
-        smallImageKey: 'roon-small',
-        smallImageText: 'Roon',
-        instance: false,
-    });
-
-}
-
-async function setActivityPaused(line1, line2) {
-
-    rpc.setActivity({
-        details: '[Paused] ' + line1,
-        state: line2,
-        largeImageKey: 'roon-main',
-        largeImageText: 'Paused on Roon.',
-        smallImageKey: 'roon-small',
-        smallImageText: 'Roon',
-        instance: false,
-    });
-
-}
-
-async function setActivityStopped() {
-
-    rpc.setActivity({
-        details: 'Not listening',
-        largeImageKey: 'roon-main',
-        largeImageText: 'Idling in Roon',
-        smallImageKey: 'roon-small',
-        smallImageText: 'Roon',
-        instance: false,
-    })
-
-}
