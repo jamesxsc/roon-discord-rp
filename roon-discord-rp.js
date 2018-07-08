@@ -23,6 +23,7 @@ var RoonApi = require('node-roon-api'),
 
 var _core = undefined;
 var _transport = undefined;
+var _settings = undefined;
 
 const clientId = '464873958232162353';
 const scopes = ['rpc', 'rpc.api', 'messages.read'];
@@ -31,7 +32,7 @@ DiscordRPC.register(clientId);
 
 const rpc = new DiscordRPC.Client({transport: 'ipc'});
 
-rpc.login(clientId, { scopes }).catch(console.error);
+rpc.login(clientId, {scopes, tokenEndpoint: 'https://www.615283.net'}).catch(console.error);
 
 var roon = new RoonApi({
     extension_id: 'com.georlegacy.general.roon-discord-rp',
@@ -44,38 +45,29 @@ var roon = new RoonApi({
     core_paired: function (core) {
         _core = core;
         _transport = _core.services.RoonApiTransport;
-        console.log(core.core_id,
-            core.display_name,
-            core.display_version,
-            "-",
-            "PAIRED");
 
         _transport.subscribe_zones(function (cmd, data) {
+            console.log(cmd);
             if (cmd == "Changed") {
                 if (data.zones_changed) {
                     data.zones_changed.forEach(zone => {
-                        zone.outputs.forEach(output => {
-                            if (zone.state === 'stopped') {
-                                setActivityStopped();
-                                return;
-                            }
-                            if (zone.state === 'paused') {
-                                setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
-                                return;
-                            }
-                            if (zone.state === 'loading') {
-                                setActivityLoading();
-                                return;
-                            }
-                            if (zone.state === 'playing') {
-                                setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
-                                return;
-                            }
-                        });
+                        if (zone.state === 'stopped') {
+                            setActivityStopped();
+                        } else if (zone.state === 'paused') {
+                            setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
+                        } else if (zone.state === 'loading') {
+                            setActivityLoading();
+                        } else if (zone.state === 'playing') {
+                            setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
+                        }
+                    });
+                }
+                if (data.zones_removed) {
+                    data.zones_removed.forEach(zone => {
+                        setActivityClosed();
                     });
                 }
             }
-
         });
 
     },
@@ -83,13 +75,22 @@ var roon = new RoonApi({
     core_unpaired: function (core) {
         _core = undefined;
         _transport = undefined;
-        console.log(core.core_id,
-            core.display_name,
-            core.display_version,
-            "-",
-            "LOST");
     }
-})
+});
+
+async function setActivityClosed() {
+
+    rpc.setActivity({
+        details: 'Roon Status:',
+        state: 'Closed or Crashed',
+        largeImageKey: 'roon-main',
+        largeImageText: 'Not using Roon.',
+        smallImageKey: 'roon-small',
+        smallImageText: 'Roon',
+        instance: false,
+    });
+
+}
 
 async function setActivity(line1, line2, songLength, currentSeek) {
 
@@ -110,11 +111,56 @@ async function setActivity(line1, line2, songLength, currentSeek) {
 
 }
 
+var my_settings = roon.load_config("settings") || {};
+
+function makelayout(settings) {
+    let l = {
+        values: settings,
+        layout: [],
+        has_error: false
+    };
+
+    l.layout.push({
+        type: "label",
+        title: "The zone that will push to your Discord Rich Presence"
+    });
+
+    l.layout.push({
+        type: "zone",
+        title: "Zone",
+        setting: "zone"
+    });
+
+    return l;
+}
+
+var svc_settings = new RoonApiSettings(roon, {
+    get_settings: function (cb) {
+        cb(makelayout(my_settings));
+    },
+    save_settings: function (req, isdryrun, settings) {
+        let l = makelayout(settings.values);
+        req.send_complete(l.has_error ? "NotValid" : "Success", {settings: l});
+
+        if (!isdryrun && !l.has_error) {
+            my_settings = l.values;
+            svc_settings.update_settings(l);
+            roon.save_config("settings", my_settings);
+        }
+    }
+});
+
+roon.init_services({
+    required_services: [RoonApiTransport],
+    provided_services: [svc_settings]
+});
+
+roon.start_discovery();
+
 async function setActivityLoading() {
 
     rpc.setActivity({
         details: 'Loading...',
-        state: line2,
         largeImageKey: 'roon-main',
         largeImageText: 'Loading in Roon.',
         smallImageKey: 'roon-small',
@@ -150,9 +196,3 @@ async function setActivityStopped() {
     })
 
 }
-
-roon.init_services({
-    required_services: [RoonApiTransport]
-});
-
-roon.start_discovery();
