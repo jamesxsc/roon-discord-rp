@@ -51,20 +51,26 @@ var roon = new RoonApi({
             if (cmd == "Changed") {
                 if (data.zones_changed) {
                     data.zones_changed.forEach(zone => {
-                        if (zone.state === 'stopped') {
-                            setActivityStopped();
-                        } else if (zone.state === 'paused') {
-                            setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
-                        } else if (zone.state === 'loading') {
-                            setActivityLoading();
-                        } else if (zone.state === 'playing') {
-                            setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
-                        }
+                        console.log(zone.zone_id);
+                        console.log(my_settings.zone.zone_id);
+                        //if (zone.zone_id === my_settings.zone.zone_id) {
+                            if (zone.state === 'stopped') {
+                                setActivityStopped();
+                            } else if (zone.state === 'paused') {
+                                setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
+                            } else if (zone.state === 'loading') {
+                                setActivityLoading();
+                            } else if (zone.state === 'playing') {
+                                setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
+                            }
+                        //}
                     });
                 }
                 if (data.zones_removed) {
                     data.zones_removed.forEach(zone => {
-                        setActivityClosed();
+                       // if (zone.zone_id === my_settings.zone.zone_id) {
+                            setActivityClosed();
+                       // }
                     });
                 }
             }
@@ -77,6 +83,53 @@ var roon = new RoonApi({
         _transport = undefined;
     }
 });
+
+var my_settings = roon.load_config("settings") || {
+};
+
+function makelayout() {
+    let l = {
+        values: my_settings,
+        layout: [],
+        has_error: false
+    };
+
+    l.layout.push({
+        type: "label",
+        title: "The zone that will push to your Discord Rich Presence"
+    });
+
+    l.layout.push({
+        type: "zone",
+        title: "Zone",
+        setting: "zone"
+    });
+
+    return l;
+}
+
+var svc_settings = new RoonApiSettings(roon, {
+    get_settings: function (cb) {
+        cb(makelayout());
+    },
+    save_settings: function (req, isdryrun, settings) {
+        let l = makelayout(settings.values);
+        req.send_complete(l.has_error ? "NotValid" : "Success", {settings: l});
+
+        if (!isdryrun && !l.has_error) {
+            my_settings = l.values;
+            svc_settings.update_settings(l);
+            roon.save_config("settings", my_settings);
+        }
+    }
+});
+
+roon.init_services({
+    required_services: [RoonApiTransport],
+    provided_services: [svc_settings]
+});
+
+roon.start_discovery();
 
 async function setActivityClosed() {
 
@@ -150,49 +203,3 @@ async function setActivityStopped() {
     })
 
 }
-
-var my_settings = roon.load_config("settings") || {};
-
-function makelayout(settings) {
-    let l = {
-        values: settings,
-        layout: [],
-        has_error: false
-    };
-
-    l.layout.push({
-        type: "label",
-        title: "The zone that will push to your Discord Rich Presence"
-    });
-
-    l.layout.push({
-        type: "zone",
-        title: "Zone",
-        setting: "zone"
-    });
-
-    return l;
-}
-
-var svc_settings = new RoonApiSettings(roon, {
-    get_settings: function (cb) {
-        cb(makelayout(my_settings));
-    },
-    save_settings: function (req, isdryrun, settings) {
-        let l = makelayout(settings.values);
-        req.send_complete(l.has_error ? "NotValid" : "Success", {settings: l});
-
-        if (!isdryrun && !l.has_error) {
-            my_settings = l.values;
-            svc_settings.update_settings(l);
-            roon.save_config("settings", my_settings);
-        }
-    }
-});
-
-roon.init_services({
-    required_services: [RoonApiTransport],
-    provided_services: [svc_settings]
-});
-
-roon.start_discovery();
