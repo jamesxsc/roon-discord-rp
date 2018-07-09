@@ -1,17 +1,18 @@
-// Copyright 2018 615283 (James Conway)
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
+/* 
+Copyright 2018 615283 (James Conway)
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 
 "use strict";
 
@@ -202,4 +203,54 @@ async function setActivityStopped() {
         instance: false,
     })
 
+<<<<<<< HEAD
 }
+=======
+}
+
+var my_settings = roon.load_config("settings") || {};
+
+function makelayout(settings) {
+    let l = {
+        values: settings,
+        layout: [],
+        has_error: false
+    };
+
+    l.layout.push({
+        type: "label",
+        title: "The zone that will push to your Discord Rich Presence"
+    });
+
+    l.layout.push({
+        type: "zone",
+        title: "Zone",
+        setting: "zone"
+    });
+
+    return l;
+}
+
+var svc_settings = new RoonApiSettings(roon, {
+    get_settings: function (cb) {
+        cb(makelayout(my_settings));
+    },
+    save_settings: function (req, isdryrun, settings) {
+        let l = makelayout(settings.values);
+        req.send_complete(l.has_error ? "NotValid" : "Success", {settings: l});
+
+        if (!isdryrun && !l.has_error) {
+            my_settings = l.values;
+            svc_settings.update_settings(l);
+            roon.save_config("settings", my_settings);
+        }
+    }
+});
+
+roon.init_services({
+    required_services: [RoonApiTransport],
+    provided_services: [svc_settings]
+});
+
+roon.start_discovery();
+>>>>>>> 596a622d730528d437540926db445668532f66b9
