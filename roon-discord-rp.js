@@ -203,9 +203,6 @@ async function setActivityStopped() {
         instance: false,
     })
 
-<<<<<<< HEAD
-}
-=======
 }
 
 var my_settings = roon.load_config("settings") || {};
@@ -253,4 +250,3 @@ roon.init_services({
 });
 
 roon.start_discovery();
->>>>>>> 596a622d730528d437540926db445668532f66b9
