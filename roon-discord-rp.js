@@ -57,11 +57,11 @@ var roon = new RoonApi({
                                 if (zone.state === 'stopped') {
                                     setActivityStopped();
                                 } else if (zone.state === 'paused') {
-                                    setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
+                                    setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.display_name);
                                 } else if (zone.state === 'loading') {
-                                    setActivityLoading();
+                                    setActivityLoading(zone.display_name);
                                 } else if (zone.state === 'playing') {
-                                    setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
+                                    setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position, zone.display_name);
                                 }
                             }
                         }
@@ -80,11 +80,11 @@ var roon = new RoonApi({
                                             if (zone.state === 'stopped') {
                                                 setActivityStopped();
                                             } else if (zone.state === 'paused') {
-                                                setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
+                                                setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.display_name);
                                             } else if (zone.state === 'loading') {
-                                                setActivityLoading();
+                                                setActivityLoading(zone.display_name);
                                             } else if (zone.state === 'playing') {
-                                                setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
+                                                setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position, zone.display_name);
                                             }
                                         }
                                     }
@@ -167,7 +167,7 @@ async function setActivityClosed() {
 
 }
 
-async function setActivity(line1, line2, songLength, currentSeek) {
+async function setActivity(line1, line2, songLength, currentSeek, zoneName) {
 
     var startTimestamp = (new Date().getTime() / 1000) - currentSeek;
     var endTimestamp = startTimestamp + songLength;
@@ -178,7 +178,7 @@ async function setActivity(line1, line2, songLength, currentSeek) {
         startTimestamp,
         endTimestamp,
         largeImageKey: 'roon-main',
-        largeImageText: 'Listening with Roon.',
+        largeImageText: 'Zone: ' + zoneName,
         smallImageKey: 'play-symbol',
         smallImageText: 'Roon',
         instance: false,
@@ -186,12 +186,12 @@ async function setActivity(line1, line2, songLength, currentSeek) {
 
 }
 
-async function setActivityLoading() {
+async function setActivityLoading(zoneName) {
 
     rpc.setActivity({
         details: 'Loading...',
         largeImageKey: 'roon-main',
-        largeImageText: 'Loading in Roon.',
+        largeImageText: 'Zone: ' + zoneName,
         smallImageKey: 'roon-small',
         smallImageText: 'Roon',
         instance: false,
@@ -199,13 +199,13 @@ async function setActivityLoading() {
 
 }
 
-async function setActivityPaused(line1, line2) {
+async function setActivityPaused(line1, line2, zoneName) {
 
     rpc.setActivity({
         details: '[Paused] ' + line1,
         state: line2,
         largeImageKey: 'roon-main',
-        largeImageText: 'Paused on Roon.',
+        largeImageText: 'Zone: ' + zoneName,
         smallImageKey: 'pause-symbol',
         smallImageText: 'Roon',
         instance: false,
