@@ -33,7 +33,7 @@ DiscordRPC.register(clientId);
 
 const rpc = new DiscordRPC.Client({transport: 'ipc'});
 
-rpc.login(clientId, {scopes, tokenEndpoint: 'https://www.615283.net'}).catch(console.error);
+rpc.login(clientId, {scopes, tokenEndpoint: 'https://google.com'}).catch(console.error);
 
 var roon = new RoonApi({
     extension_id: 'com.georlegacy.general.roon-discord-rp',
@@ -52,29 +52,49 @@ var roon = new RoonApi({
             if (cmd == "Changed") {
                 if (data.zones_changed) {
                     data.zones_changed.forEach(zone => {
-                        console.log(zone.zone_id);
-                        console.log(my_settings);
-                        console.log(my_settings.zone);
-                        console.log(my_settings.zone.output_id);
-                        if (zone.zone_id === my_settings.zone.output_id) {
-                            if (zone.state === 'stopped') {
-                                setActivityStopped();
-                            } else if (zone.state === 'paused') {
-                                setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
-                            } else if (zone.state === 'loading') {
-                                setActivityLoading();
-                            } else if (zone.state === 'playing') {
-                                setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
+                        for (var output of zone.outputs) {
+                            if (output.output_id == my_settings.zone.output_id) {
+                                if (zone.state === 'stopped') {
+                                    setActivityStopped();
+                                } else if (zone.state === 'paused') {
+                                    setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
+                                } else if (zone.state === 'loading') {
+                                    setActivityLoading();
+                                } else if (zone.state === 'playing') {
+                                    setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
+                                }
+                            }
+                        }
+                    });
+                }
+                if (data.zones_seek_changed) {
+                    data.zones_seek_changed.forEach(change => {
+                        var transportZones = new Array();
+                        for (var key in _transport._zones)
+                            transportZones.push(_transport._zones[key]);
+                        for (var zone of transportZones) {
+                            for (var zoneChanged of data.zones_seek_changed) {
+                                if (zone.zone_id == zoneChanged.zone_id) {
+                                    for (var output of zone.outputs) {
+                                        if (output.output_id == my_settings.zone.output_id) {
+                                            if (zone.state === 'stopped') {
+                                                setActivityStopped();
+                                            } else if (zone.state === 'paused') {
+                                                setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2);
+                                            } else if (zone.state === 'loading') {
+                                                setActivityLoading();
+                                            } else if (zone.state === 'playing') {
+                                                setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
                 }
                 if (data.zones_removed) {
-                    data.zones_removed.forEach(zone => {
-                        if (zone.zone_id === my_settings.zone.output_id) {
-                            setActivityClosed();
-                        }
-                    });
+                    setActivityClosed();
                 }
             }
         });
@@ -90,9 +110,9 @@ var roon = new RoonApi({
 var my_settings = roon.load_config("settings") || {
 };
 
-function makelayout() {
+function makelayout(settings) {
     let l = {
-        values: my_settings,
+        values: settings,
         layout: [],
         has_error: false
     };
@@ -107,16 +127,12 @@ function makelayout() {
         title: "Zone",
         setting: "zone"
     });
-
-    l.values = roon.load_config("settings") || {
-    };
-
     return l;
 }
 
 var svc_settings = new RoonApiSettings(roon, {
     get_settings: function (cb) {
-        cb(makelayout());
+        cb(makelayout(my_settings));
     },
     save_settings: function (req, isdryrun, settings) {
         let l = makelayout(settings.values);
@@ -140,7 +156,7 @@ roon.start_discovery();
 async function setActivityClosed() {
 
     rpc.setActivity({
-        details: 'Roon Status:',
+        details: 'Output Status:',
         state: 'Closed or Crashed',
         largeImageKey: 'roon-main',
         largeImageText: 'Not using Roon.',
