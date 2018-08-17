@@ -53,8 +53,10 @@ var roon = new RoonApi({
                 if (data.zones_changed) {
                     data.zones_changed.forEach(zone => {
                         console.log(zone.zone_id);
-                        console.log(my_settings.zone.zone_id);
-                //        if (zone.zone_id === my_settings.zone.zone_id) {
+                        console.log(my_settings);
+                        console.log(my_settings.zone);
+                        console.log(my_settings.zone.output_id);
+                        if (zone.zone_id === my_settings.zone.output_id) {
                             if (zone.state === 'stopped') {
                                 setActivityStopped();
                             } else if (zone.state === 'paused') {
@@ -64,19 +66,14 @@ var roon = new RoonApi({
                             } else if (zone.state === 'playing') {
                                 setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position);
                             }
-                       // }
+                        }
                     });
-                }
-                if (data.settings) {
-                    console.log('is settings');
-                    console.log(data.settings.values.zone);
-                    my_settings.zone = data.settings.values.zone;
                 }
                 if (data.zones_removed) {
                     data.zones_removed.forEach(zone => {
-                        //if (zone.zone_id === my_settings.zone.zone_id) {
+                        if (zone.zone_id === my_settings.zone.output_id) {
                             setActivityClosed();
-                        //}
+                        }
                     });
                 }
             }
