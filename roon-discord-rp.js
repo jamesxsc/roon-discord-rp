@@ -18,7 +18,7 @@ limitations under the License.
 
 var RoonApi = require('node-roon-api'),
     RoonApiSettings = require('node-roon-api-settings'),
-    RoonApiStautus = require('node-roon-api-status'),
+    RoonApiStatus = require('node-roon-api-status'),
     RoonApiTransport = require('node-roon-api-transport'),
     DiscordRPC = require('discord-rpc');
 
@@ -169,9 +169,9 @@ async function setActivityClosed() {
 
 async function setActivity(line1, line2, songLength, currentSeek, zoneName) {
 
-    var startTimestamp = (new Date().getTime() / 1000) - currentSeek;
-    var endTimestamp = startTimestamp + songLength;
-
+    var startTimestamp = Math.round((new Date().getTime() / 1000) - currentSeek);
+    var endTimestamp = Math.round(startTimestamp + songLength);
+    
     rpc.setActivity({
         details: line1,
         state: line2,
