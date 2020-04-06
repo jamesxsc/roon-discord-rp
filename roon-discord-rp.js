@@ -20,20 +20,22 @@ var RoonApi = require('node-roon-api'),
     RoonApiSettings = require('node-roon-api-settings'),
     RoonApiStatus = require('node-roon-api-status'),
     RoonApiTransport = require('node-roon-api-transport'),
-    DiscordRPC = require('discord-rpc');
+    DiscordRPC = require('./node_modules/discord-rpc');
 
 var _core = undefined;
 var _transport = undefined;
 var _settings = undefined;
 
 const clientId = '464873958232162353';
-const scopes = ['rpc', 'rpc.api', 'messages.read'];
+//const scopes = ['rpc', 'rpc.api', 'messages.read'];
 
-DiscordRPC.register(clientId);
+//DiscordRPC.register(clientId);
 
-const rpc = new DiscordRPC.Client({transport: 'ipc'});
+//const rpc = new DiscordRPC.Client({transport: 'ipc'});
 
-rpc.login(clientId, {scopes, tokenEndpoint: 'https://google.com'}).catch(console.error);
+//rpc.login(clientId, {scopes, tokenEndpoint: 'https://google.com'}).catch(console.error);
+
+const client = require('discord-rich-presence')(clientId);
 
 var roon = new RoonApi({
     extension_id: 'com.georlegacy.general.roon-discord-rp',
@@ -45,6 +47,7 @@ var roon = new RoonApi({
 
     core_paired: function (core) {
         _core = core;
+
         _transport = _core.services.RoonApiTransport;
 
         _transport.subscribe_zones(function (cmd, data) {
@@ -155,7 +158,7 @@ roon.start_discovery();
 
 async function setActivityClosed() {
 
-    rpc.setActivity({
+    client.updatePresence({
         details: 'Output Status:',
         state: 'Closed or Crashed',
         largeImageKey: 'roon-main',
@@ -172,7 +175,7 @@ async function setActivity(line1, line2, songLength, currentSeek, zoneName) {
     var startTimestamp = Math.round((new Date().getTime() / 1000) - currentSeek);
     var endTimestamp = Math.round(startTimestamp + songLength);
     
-    rpc.setActivity({
+    client.updatePresence({
         details: line1,
         state: line2,
         startTimestamp,
@@ -188,7 +191,7 @@ async function setActivity(line1, line2, songLength, currentSeek, zoneName) {
 
 async function setActivityLoading(zoneName) {
 
-    rpc.setActivity({
+    client.updatePresence({
         details: 'Loading...',
         largeImageKey: 'roon-main',
         largeImageText: 'Zone: ' + zoneName,
@@ -201,7 +204,7 @@ async function setActivityLoading(zoneName) {
 
 async function setActivityPaused(line1, line2, zoneName) {
 
-    rpc.setActivity({
+    client.updatePresence({
         details: '[Paused] ' + line1,
         state: line2,
         largeImageKey: 'roon-main',
@@ -215,7 +218,7 @@ async function setActivityPaused(line1, line2, zoneName) {
 
 async function setActivityStopped() {
 
-    rpc.setActivity({
+    client.updatePresence({
         details: 'Not listening',
         largeImageKey: 'roon-main',
         largeImageText: 'Idling in Roon',

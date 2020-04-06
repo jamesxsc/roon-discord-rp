@@ -6,13 +6,13 @@
   "author": "615283 (James Conway)",
   "license": "",
   "dependencies": {
-    "discord-rpc": "^3.0.0-beta.12",
-    "electron": "^2.0.4",
+    "discord-rich-presence": "0.0.8",
+    "electron": "^2.0.18",
+    "node-fetch": "^2.6.0",
     "node-roon-api": "github:roonlabs/node-roon-api",
     "node-roon-api-settings": "github:roonlabs/node-roon-api-settings",
     "node-roon-api-status": "github:roonlabs/node-roon-api-status",
     "node-roon-api-transport": "github:roonlabs/node-roon-api-transport",
-    "node-fetch": "^2.1.2",
-    "ws": "^5.2.1"
+    "ws": "^5.2.2"
   }
 }
