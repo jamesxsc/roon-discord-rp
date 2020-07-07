@@ -7,7 +7,7 @@
   "license": "",
   "dependencies": {
     "discord-rich-presence": "0.0.8",
-    "electron": "^2.0.18",
+    "electron": "^9.1.0",
     "node-fetch": "^2.6.0",
     "node-roon-api": "github:roonlabs/node-roon-api",
     "node-roon-api-settings": "github:roonlabs/node-roon-api-settings",
