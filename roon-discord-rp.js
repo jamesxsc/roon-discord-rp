@@ -16,87 +16,60 @@ limitations under the License.
 
 "use strict";
 
-var RoonApi = require('node-roon-api'),
-    RoonApiSettings = require('node-roon-api-settings'),
-    RoonApiStatus = require('node-roon-api-status'),
-    RoonApiTransport = require('node-roon-api-transport'),
-    DiscordRPC = require('./node_modules/discord-rpc');
+const   RoonApi             = require('node-roon-api'),
+        RoonApiSettings     = require('node-roon-api-settings'),
+        RoonApiStatus       = require('node-roon-api-status'),
+        RoonApiTransport    = require('node-roon-api-transport'),
+        DiscordRPC          = require('./node_modules/discord-rpc');
 
-var _core = undefined;
-var _transport = undefined;
-var _settings = undefined;
+let _core         = undefined;
+let _transport    = undefined;
+const _settings   = undefined;
 
-const clientId = '464873958232162353';
-//const scopes = ['rpc', 'rpc.api', 'messages.read'];
+const clientId  = '464873958232162353';
+const client    = require('discord-rich-presence')(clientId);
 
-//DiscordRPC.register(clientId);
-
-//const rpc = new DiscordRPC.Client({transport: 'ipc'});
-
-//rpc.login(clientId, {scopes, tokenEndpoint: 'https://google.com'}).catch(console.error);
-
-const client = require('discord-rich-presence')(clientId);
-
-var roon = new RoonApi({
-    extension_id: 'com.georlegacy.general.roon-discord-rp',
-    display_name: 'Discord Rich Presence',
-    display_version: '1.0',
-    publisher: '615283 (James Conway)',
-    email: 'j@wonacy.com',
-    website: 'https://www.615283.net',
+let roon = new RoonApi({
+    extension_id:       'com.georlegacy.general.roon-discord-rp',
+    display_name:       'Discord Rich Presence',
+    display_version:    '1.0',
+    publisher:          '615283 (James Conway)',
+    email:              'j@wonacy.com',
+    website:            'https://www.615283.net',
 
     core_paired: function (core) {
         _core = core;
 
+        // noinspection JSUnresolvedVariable
         _transport = _core.services.RoonApiTransport;
 
         _transport.subscribe_zones(function (cmd, data) {
             console.log(cmd);
-            if (cmd == "Changed") {
+            if (cmd === "Changed") {
+                // noinspection JSUnresolvedVariable
                 if (data.zones_changed) {
                     data.zones_changed.forEach(zone => {
-                        for (var output of zone.outputs) {
-                            if (output.output_id == my_settings.zone.output_id) {
-                                if (zone.state === 'stopped') {
-                                    setActivityStopped();
-                                } else if (zone.state === 'paused') {
-                                    setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.display_name);
-                                } else if (zone.state === 'loading') {
-                                    setActivityLoading(zone.display_name);
-                                } else if (zone.state === 'playing') {
-                                    setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position, zone.display_name);
-                                }
-                            }
-                        }
+                        setStateFromZone(zone)
                     });
                 }
+                // noinspection JSUnresolvedVariable
                 if (data.zones_seek_changed) {
                     data.zones_seek_changed.forEach(change => {
-                        var transportZones = new Array();
-                        for (var key in _transport._zones)
+                        let transportZones = [];
+                        for (let key in _transport._zones)
                             transportZones.push(_transport._zones[key]);
-                        for (var zone of transportZones) {
-                            for (var zoneChanged of data.zones_seek_changed) {
-                                if (zone.zone_id == zoneChanged.zone_id) {
-                                    for (var output of zone.outputs) {
-                                        if (output.output_id == my_settings.zone.output_id) {
-                                            if (zone.state === 'stopped') {
-                                                setActivityStopped();
-                                            } else if (zone.state === 'paused') {
-                                                setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.display_name);
-                                            } else if (zone.state === 'loading') {
-                                                setActivityLoading(zone.display_name);
-                                            } else if (zone.state === 'playing') {
-                                                setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position, zone.display_name);
-                                            }
-                                        }
-                                    }
+                        for (let zone of transportZones) {
+                            for (let zoneChanged of data.zones_seek_changed) {
+                                if (zone.zone_id === zoneChanged.zone_id) {
+                                    setStateFromZone(zone)
                                 }
                             }
                         }
                     });
                 }
+                // noinspection JSUnresolvedVariable
                 if (data.zones_removed) {
+                    // noinspection JSIgnoredPromiseFromCall
                     setActivityClosed();
                 }
             }
@@ -110,30 +83,30 @@ var roon = new RoonApi({
     }
 });
 
-var my_settings = roon.load_config("settings") || {
+let my_settings = roon.load_config("settings") || {
 };
 
 function makelayout(settings) {
     let l = {
-        values: settings,
-        layout: [],
-        has_error: false
+        values:     settings,
+        layout:     [],
+        has_error:  false
     };
 
     l.layout.push({
-        type: "label",
-        title: "The zone that will push to your Discord Rich Presence"
+        type:   "label",
+        title:  "The zone that will push to your Discord Rich Presence"
     });
 
     l.layout.push({
-        type: "zone",
-        title: "Zone",
-        setting: "zone"
+        type:       "zone",
+        title:      "Zone",
+        setting:    "zone"
     });
     return l;
 }
 
-var svc_settings = new RoonApiSettings(roon, {
+let svc_settings = new RoonApiSettings(roon, {
     get_settings: function (cb) {
         cb(makelayout(my_settings));
     },
@@ -156,24 +129,42 @@ roon.init_services({
 
 roon.start_discovery();
 
+function setStateFromZone(zone) {
+    // noinspection JSUnresolvedVariable
+    for (let output of zone.outputs) {
+        if (my_settings.zone && output.output_id === my_settings.zone.output_id) {
+            if (zone.state === 'stopped') {
+                // noinspection JSIgnoredPromiseFromCall
+                setActivityStopped();
+            } else if (zone.state === 'paused') {
+                // noinspection JSIgnoredPromiseFromCall
+                setActivityPaused(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.display_name);
+            } else if (zone.state === 'loading') {
+                // noinspection JSIgnoredPromiseFromCall
+                setActivityLoading(zone.display_name);
+            } else if (zone.state === 'playing') {
+                // noinspection JSIgnoredPromiseFromCall
+                setActivity(zone.now_playing.two_line.line1, zone.now_playing.two_line.line2, zone.now_playing.length, zone.now_playing.seek_position, zone.display_name);
+            }
+        }
+    }
+}
+
 async function setActivityClosed() {
-
     client.updatePresence({
-        details: 'Output Status:',
-        state: 'Closed or Crashed',
-        largeImageKey: 'roon-main',
+        details:        'Output Status:',
+        state:          'Closed or Crashed',
+        largeImageKey:  'roon-main',
         largeImageText: 'Not using Roon.',
-        smallImageKey: 'exit-symbol',
+        smallImageKey:  'exit-symbol',
         smallImageText: 'Roon',
-        instance: false,
+        instance:       false,
     });
-
 }
 
 async function setActivity(line1, line2, songLength, currentSeek, zoneName) {
-
-    var startTimestamp = Math.round((new Date().getTime() / 1000) - currentSeek);
-    var endTimestamp = Math.round(startTimestamp + songLength);
+    const startTimestamp = Math.round((new Date().getTime() / 1000) - currentSeek);
+    const endTimestamp = Math.round(startTimestamp + songLength);
     
     client.updatePresence({
         details: line1,
@@ -186,11 +177,9 @@ async function setActivity(line1, line2, songLength, currentSeek, zoneName) {
         smallImageText: 'Roon',
         instance: false,
     });
-
 }
 
 async function setActivityLoading(zoneName) {
-
     client.updatePresence({
         details: 'Loading...',
         largeImageKey: 'roon-main',
@@ -199,11 +188,9 @@ async function setActivityLoading(zoneName) {
         smallImageText: 'Roon',
         instance: false,
     });
-
 }
 
 async function setActivityPaused(line1, line2, zoneName) {
-
     client.updatePresence({
         details: '[Paused] ' + line1,
         state: line2,
@@ -213,11 +200,9 @@ async function setActivityPaused(line1, line2, zoneName) {
         smallImageText: 'Roon',
         instance: false,
     });
-
 }
 
 async function setActivityStopped() {
-
     client.updatePresence({
         details: 'Not listening',
         largeImageKey: 'roon-main',
@@ -226,5 +211,4 @@ async function setActivityStopped() {
         smallImageText: 'Roon',
         instance: false,
     })
-
 }
