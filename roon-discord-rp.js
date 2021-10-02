@@ -168,7 +168,7 @@ async function setActivity(line1, line2, songLength, currentSeek, zoneName) {
     
     client.updatePresence({
         details: line1,
-        state: 'by ' + (line2.length <= 128 ? line2 <= 0 ? "Various Artists" : line2 : line2.substring(0, 128)),
+        state: 'by ' + (line2.length <= 120 ? line2 <= 0 ? "Various Artists" : line2 : line2.substring(0, 120)),
         startTimestamp,
         endTimestamp,
         largeImageKey: 'roon-main',
@@ -193,7 +193,7 @@ async function setActivityLoading(zoneName) {
 async function setActivityPaused(line1, line2, zoneName) {
     client.updatePresence({
         details: '[Paused] ' + line1,
-        state: 'by ' + (line2.length <= 128 ? line2 <= 0 ? "Various Artists" : line2 : line2.substring(0, 128)),
+        state: 'by ' + (line2.length <= 120 ? line2 <= 0 ? "Various Artists" : line2 : line2.substring(0, 120)),
         largeImageKey: 'roon-main',
         largeImageText: 'Zone: ' + zoneName,
         smallImageKey: 'pause-symbol',
