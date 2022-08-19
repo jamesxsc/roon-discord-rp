@@ -155,9 +155,9 @@ async function setActivityClosed() {
         details:        'Output Status:',
         state:          'Closed or Crashed',
         largeImageKey:  'roon-main',
-        largeImageText: 'Not using Roon.',
+        largeImageText: 'Roon',
         smallImageKey:  'exit-symbol',
-        smallImageText: 'Roon',
+        smallImageText: 'Not using Roon.',
         instance:       false,
     });
 }
@@ -167,14 +167,14 @@ async function setActivity(line1, line2, songLength, currentSeek, zoneName) {
     const endTimestamp = Math.round(startTimestamp + songLength);
     
     client.updatePresence({
-        details: line1,
+        details: (line1.length <= 1 ? line1 + "ㅤㅤ" : line1),
         state: 'by ' + (line2.length <= 120 ? line2 <= 0 ? "Various Artists" : line2 : line2.substring(0, 120)),
         startTimestamp,
         endTimestamp,
         largeImageKey: 'roon-main',
-        largeImageText: 'Zone: ' + zoneName,
+        largeImageText: 'Roon',
         smallImageKey: 'play-symbol',
-        smallImageText: 'Roon',
+        smallImageText: 'Zone: ' + zoneName,
         instance: false,
     });
 }
@@ -183,9 +183,9 @@ async function setActivityLoading(zoneName) {
     client.updatePresence({
         details: 'Loading...',
         largeImageKey: 'roon-main',
-        largeImageText: 'Zone: ' + zoneName,
+        largeImageText: 'Roon',
         smallImageKey: 'roon-small',
-        smallImageText: 'Roon',
+        smallImageText: 'Zone: ' + zoneName,
         instance: false,
     });
 }
@@ -195,9 +195,9 @@ async function setActivityPaused(line1, line2, zoneName) {
         details: '[Paused] ' + line1,
         state: 'by ' + (line2.length <= 120 ? line2 <= 0 ? "Various Artists" : line2 : line2.substring(0, 120)),
         largeImageKey: 'roon-main',
-        largeImageText: 'Zone: ' + zoneName,
+        largeImageText: 'Roon',
         smallImageKey: 'pause-symbol',
-        smallImageText: 'Roon',
+        smallImageText: 'Zone: ' + zoneName,
         instance: false,
     });
 }
@@ -206,9 +206,9 @@ async function setActivityStopped() {
     client.updatePresence({
         details: 'Not listening',
         largeImageKey: 'roon-main',
-        largeImageText: 'Idling in Roon',
+        largeImageText: 'Roon',
         smallImageKey: 'stop-symbol',
-        smallImageText: 'Roon',
+        smallImageText: 'Idling in Roon',
         instance: false,
     })
 }
