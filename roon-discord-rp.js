@@ -166,17 +166,30 @@ async function setActivity(line1, line2, songLength, currentSeek, zoneName) {
     const startTimestamp = Math.round((new Date().getTime() / 1000) - currentSeek);
     const endTimestamp = Math.round(startTimestamp + songLength);
     
-    client.updatePresence({
-        details: (line1.length <= 1 ? line1 + "ㅤㅤ" : line1),
-        state: 'by ' + (line2.length <= 120 ? line2 <= 0 ? "Various Artists" : line2 : line2.substring(0, 120)),
-        startTimestamp,
-        endTimestamp,
-        largeImageKey: 'roon-main',
-        largeImageText: 'Roon',
-        smallImageKey: 'play-symbol',
-        smallImageText: 'Zone: ' + zoneName,
-        instance: false,
-    });
+    if(songLength) {
+        client.updatePresence({
+            details: (line1.length <= 1 ? line1 + "" : line1),
+            state: 'by ' + (line2.length <= 120 ? line2 <= 0 ? "Various Artists" : line2 : line2.substring(0, 120)),
+            startTimestamp,
+            endTimestamp,
+            largeImageKey: 'roon-main',
+            largeImageText: 'Roon',
+            smallImageKey: 'play-symbol',
+            smallImageText: 'Zone: ' + zoneName,
+            instance: false,
+        });
+    }
+    else {
+        client.updatePresence({
+            details: (line1.length <= 1 ? line1 + "" : line1),
+            state: 'by ' + (line2.length <= 120 ? line2 <= 0 ? "Various Artists" : line2 : line2.substring(0, 120)),
+            largeImageKey: 'roon-main',
+            largeImageText: 'Roon',
+            smallImageKey: 'play-symbol',
+            smallImageText: 'Zone: ' + zoneName,
+            instance: false,
+        });
+    }
 }
 
 async function setActivityLoading(zoneName) {
